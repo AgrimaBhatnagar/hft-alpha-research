@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>HFT Alpha Research Terminal</title>
+
+    <!-- Vue 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+
+            margin: 0;
+
+            background:
+                #07111f;
+
+            color:
+                #dce7f5;
+
+            font-family:
+                Inter,
+                Segoe UI,
+                Arial,
+                sans-serif;
+        }
+
+        .app {
+
+            min-height: 100vh;
+
+            padding: 24px;
+        }
+
+        .header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 22px;
+        }
+
+        .title {
+
+            font-size: 26px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+
+            color: #7f91a8;
+
+            margin-top: 5px;
+
+            font-size: 13px;
+        }
+
+        .status {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            font-size: 13px;
+
+            color: #7f91a8;
+        }
+
+        .dot {
+
+            width: 9px;
+
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: #34d399;
+
+            box-shadow:
+                0 0 10px #34d399;
+        }
+
+        .metrics {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(6, 1fr);
+
+            gap: 12px;
+
+            margin-bottom: 14px;
+        }
+
+        .card {
+
+            background:
+                #0c1929;
+
+            border:
+                1px solid #1a2b40;
+
+            border-radius: 10px;
+
+            padding: 16px;
+        }
+
+        .metric-label {
+
+            color: #71849b;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+
+            font-size: 21px;
+
+            font-weight: 650;
+        }
+
+        .green {
+            color: #34d399;
+        }
+
+        .red {
+            color: #fb7185;
+        }
+
+        .yellow {
+            color: #fbbf24;
+        }
+
+        .blue {
+            color: #60a5fa;
+        }
+
+        .layout {
+
+            display: grid;
+
+            grid-template-columns:
+                1.4fr
+                0.8fr;
+
+            gap: 14px;
+        }
+
+        .left,
+        .right {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 14px;
+        }
+
+        .panel-title {
+
+            font-size: 13px;
+
+            font-weight: 650;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+
+            color: #9eb0c4;
+
+            margin-bottom: 14px;
+        }
+
+        .chart-container {
+
+            height: 260px;
+        }
+
+        .book {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 16px;
+        }
+
+        .book-header {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            color: #62758b;
+
+            font-size: 11px;
+
+            text-transform: uppercase;
+
+            padding-bottom: 7px;
+
+            border-bottom:
+                1px solid #1a2b40;
+        }
+
+        .book-row {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            padding: 6px 0;
+
+            font-family:
+                Consolas,
+                monospace;
+
+            font-size: 13px;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,0.025);
+        }
+
+        .ask-price {
+            color: #fb7185;
+        }
+
+        .bid-price {
+            color: #34d399;
+        }
+
+        .quantity {
+            text-align: right;
+
+            color: #b5c4d5;
+        }
+
+        .signal-box {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 14px;
+
+            border-radius: 8px;
+
+            background: #091524;
+
+            border: 1px solid #1b2d42;
+
+            margin-bottom: 12px;
+        }
+
+        .signal-name {
+
+            font-size: 12px;
+
+            color: #71849b;
+
+            text-transform: uppercase;
+        }
+
+        .signal-value {
+
+            font-size: 20px;
+
+            font-weight: 700;
+        }
+
+        .progress {
+
+            height: 8px;
+
+            background: #172438;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+
+            height: 100%;
+
+            transition:
+                width 0.25s ease;
+        }
+
+        .bull {
+
+            background: #34d399;
+        }
+
+        .bear {
+
+            background: #fb7185;
+        }
+
+        .neutral {
+
+            background: #64748b;
+        }
+
+        .footer {
+
+            margin-top: 14px;
+
+            color: #53667c;
+
+            font-size: 11px;
+
+            display: flex;
+
+            justify-content: space-between;
+        }
+
+        .controls {
+
+            display: flex;
+
+            gap: 8px;
+        }
+
+        button {
+
+            background: #102137;
+
+            color: #bcd0e5;
+
+            border: 1px solid #243a54;
+
+            padding: 8px 14px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+
+            background: #162b45;
+        }
+
+        @media(max-width: 1100px) {
+
+            .metrics {
+
+                grid-template-columns:
+                    repeat(3, 1fr);
+            }
+
+            .layout {
+
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width: 650px) {
+
+            .metrics {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+            .book {
+
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div id="app">
+
+    <div class="app">
+
+        <!-- HEADER -->
+
+        <div class="header">
+
+            <div>
+
+                <div class="title">
+                    HFT Alpha Research Terminal
+                </div>
+
+                <div class="subtitle">
+
+                    AAPL LOBSTER
+                    ·
+                    Event-driven market microstructure
+                    ·
+                    ML alpha
+
+                </div>
+
+            </div>
+
+            <div class="status">
+
+                <div class="dot"></div>
+
+                LIVE REPLAY
+
+            </div>
+
+        </div>
+
+
+        <!-- METRICS -->
+
+        <div class="metrics">
+
+            <div class="card">
+
+                <div class="metric-label">
+                    Mid Price
+                </div>
+
+                <div class="metric-value">
+                    {{ money(data.mid_price) }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    Spread
+                </div>
+
+                <div class="metric-value">
+                    {{ fixed(data.spread, 4) }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    Microprice
+                </div>
+
+                <div class="metric-value blue">
+                    {{ money(data.microprice) }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    OBI L1
+                </div>
+
+                <div
+                    class="metric-value"
+                    :class="obiClass(data.obi)"
+                >
+
+                    {{ fixed(data.obi, 3) }}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    Alpha Probability
+                </div>
+
+                <div class="metric-value yellow">
+
+                    {{ percent(data.alpha_probability) }}
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    Equity
+                </div>
+
+                <div
+                    class="metric-value"
+                    :class="data.equity >= 1 ? 'green' : 'red'"
+                >
+
+                    {{ fixed(data.equity, 5) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MAIN -->
+
+        <div class="layout">
+
+            <div class="left">
+
+
+                <!-- PRICE -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Mid Price / Microstructure
+                    </div>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="priceChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORDER BOOK -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Live Order Book
+                    </div>
+
+                    <div class="book">
+
+
+                        <!-- ASKS -->
+
+                        <div>
+
+                            <div class="book-header">
+
+                                <span>
+                                    Ask Price
+                                </span>
+
+                                <span
+                                    style="text-align:right"
+                                >
+                                    Quantity
+                                </span>
+
+                            </div>
+
+                            <div
+                                v-for="(level, index) in data.asks"
+                                :key="'ask' + index"
+                                class="book-row"
+                            >
+
+                                <span class="ask-price">
+
+                                    {{ money(level.price) }}
+
+                                </span>
+
+                                <span class="quantity">
+
+                                    {{ number(level.quantity) }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BIDS -->
+
+                        <div>
+
+                            <div class="book-header">
+
+                                <span>
+                                    Bid Price
+                                </span>
+
+                                <span
+                                    style="text-align:right"
+                                >
+                                    Quantity
+                                </span>
+
+                            </div>
+
+                            <div
+                                v-for="(level, index) in data.bids"
+                                :key="'bid' + index"
+                                class="book-row"
+                            >
+
+                                <span class="bid-price">
+
+                                    {{ money(level.price) }}
+
+                                </span>
+
+                                <span class="quantity">
+
+                                    {{ number(level.quantity) }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- OBI -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Order Book Imbalance
+                    </div>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="obiChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="right">
+
+
+                <!-- ALPHA -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Alpha Signal
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Model Probability
+                            </div>
+
+                            <div class="signal-value">
+
+                                {{ percent(data.alpha_probability) }}
+
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="signal-value"
+                            :class="predictionClass"
+                        >
+
+                            {{ predictionText }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Trading Signal
+                            </div>
+
+                            <div
+                                class="signal-value"
+                                :class="signalClass"
+                            >
+
+                                {{ signalText }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="metric-label">
+
+                        Probability
+
+                    </div>
+
+                    <div class="progress">
+
+                        <div
+                            class="progress-bar"
+                            :class="probabilityClass"
+                            :style="{
+                                width:
+                                    (data.alpha_probability * 100)
+                                    + '%'
+                            }"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STRATEGY -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Strategy Performance
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Equity
+                            </div>
+
+                            <div class="signal-value green">
+
+                                {{ fixed(data.equity, 5) }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Strategy Return
+                            </div>
+
+                            <div
+                                class="signal-value"
+                                :class="
+                                    data.strategy_return >= 0
+                                    ? 'green'
+                                    : 'red'
+                                "
+                            >
+
+                                {{
+                                    percentSigned(
+                                        data.strategy_return
+                                    )
+                                }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Signed Volume
+                            </div>
+
+                            <div class="signal-value">
+
+                                {{ number(data.signed_volume) }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PERFORMANCE -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Engine Performance
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Replay Events
+                            </div>
+
+                            <div class="signal-value">
+
+                                {{ number(data.events) }}
+
+                                /
+
+                                {{ number(data.events_available) }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Event Rate
+                            </div>
+
+                            <div class="signal-value">
+
+                                {{ number(data.event_rate) }}
+                                /sec
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="signal-box">
+
+                        <div>
+
+                            <div class="signal-name">
+                                Global OFI
+                            </div>
+
+                            <div
+                                class="signal-value"
+                                :class="obiClass(data.global_ofi)"
+                            >
+
+                                {{ fixed(data.global_ofi, 4) }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- EQUITY CHART -->
+
+                <div class="card">
+
+                    <div class="panel-title">
+                        Equity Curve
+                    </div>
+
+                    <div class="chart-container">
+
+                        <canvas
+                            id="equityChart"
+                        ></canvas>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="footer">
+
+            <div>
+
+                Dataset:
+                {{ data.dataset }}
+
+                ·
+
+                Prediction rows:
+                {{ number(data.prediction_rows) }}
+
+                ·
+
+                Backtest rows:
+                {{ number(data.backtest_rows) }}
+
+            </div>
+
+            <div class="controls">
+
+                <button
+                    @click="toggleReplay"
+                >
+
+                    {{ running ? 'Pause' : 'Replay' }}
+
+                </button>
+
+                <button
+                    @click="reset"
+                >
+
+                    Reset
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+new Vue({
+
+    el: "#app",
+
+    data: {
+
+        data: {
+
+            mid_price: 0,
+
+            spread: 0,
+
+            microprice: 0,
+
+            obi: 0,
+
+            global_ofi: 0,
+
+            alpha_probability: 0.5,
+
+            prediction: 0,
+
+            signal: 0,
+
+            equity: 1,
+
+            strategy_return: 0,
+
+            signed_volume: 0,
+
+            events: 0,
+
+            events_available: 0,
+
+            event_rate: 0,
+
+            dataset: "",
+
+            bids: [],
+
+            asks: [],
+
+            price_history: [],
+
+            obi_history: [],
+
+            equity_history: []
+
+        },
+
+        running: true,
+
+        timer: null,
+
+        priceChart: null,
+
+        obiChart: null,
+
+        equityChart: null
+
+    },
+
+
+    computed: {
+
+        predictionText() {
+
+            if (this.data.prediction === 1)
+                return "UP"
+
+            if (this.data.prediction === -1)
+                return "DOWN"
+
+            return "FLAT"
+        },
+
+
+        predictionClass() {
+
+            if (this.data.prediction === 1)
+                return "green"
+
+            if (this.data.prediction === -1)
+                return "red"
+
+            return "yellow"
+        },
+
+
+        signalText() {
+
+            if (this.data.signal === 1)
+                return "LONG"
+
+            if (this.data.signal === -1)
+                return "SHORT"
+
+            return "FLAT"
+        },
+
+
+        signalClass() {
+
+            if (this.data.signal === 1)
+                return "green"
+
+            if (this.data.signal === -1)
+                return "red"
+
+            return "yellow"
+        },
+
+
+        probabilityClass() {
+
+            if (this.data.alpha_probability >= 0.6)
+                return "bull"
+
+            if (this.data.alpha_probability <= 0.4)
+                return "bear"
+
+            return "neutral"
+        }
+
+    },
+
+
+    mounted() {
+
+        this.createCharts()
+
+        this.fetchMarket()
+
+        this.timer = setInterval(
+            this.fetchMarket,
+            700
+        )
+
+    },
+
+
+    beforeDestroy() {
+
+        clearInterval(
+            this.timer
+        )
+
+    },
+
+
+    methods: {
+
+        async fetchMarket() {
+
+            try {
+
+                const response =
+                    await axios.get(
+                        "http://127.0.0.1:5000/api/market"
+                    )
+
+                this.data =
+                    response.data
+
+                this.updateCharts()
+
+            }
+            catch(error) {
+
+                console.error(
+                    "API error:",
+                    error
+                )
+
+            }
+
+        },
+
+
+        async reset() {
+
+            try {
+
+                const response =
+                    await axios.post(
+                        "http://127.0.0.1:5000/api/reset"
+                    )
+
+                this.data =
+                    response.data
+
+                this.updateCharts()
+
+            }
+            catch(error) {
+
+                console.error(
+                    "Reset error:",
+                    error
+                )
+
+            }
+
+        },
+
+
+        toggleReplay() {
+
+            this.running =
+                !this.running
+
+            if (this.running) {
+
+                this.timer =
+                    setInterval(
+                        this.fetchMarket,
+                        700
+                    )
+
+            }
+            else {
+
+                clearInterval(
+                    this.timer
+                )
+
+            }
+
+        },
+
+
+        createCharts() {
+
+            const chartOptions = {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                animation: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    }
+
+                },
+
+                scales: {
+
+                    x: {
+
+                        display: false
+
+                    },
+
+                    y: {
+
+                        grid: {
+                            color: "#172638"
+                        },
+
+                        ticks: {
+                            color: "#71849b"
+                        }
+
+                    }
+
+                }
+
+            }
+
+
+            this.priceChart =
+                new Chart(
+
+                    document
+                        .getElementById(
+                            "priceChart"
+                        ),
+
+                    {
+
+                        type: "line",
+
+                        data: {
+
+                            labels: [],
+
+                            datasets: [
+
+                                {
+
+                                    data: [],
+
+                                    borderColor:
+                                        "#60a5fa",
+
+                                    borderWidth: 2,
+
+                                    pointRadius: 0,
+
+                                    tension: 0.2
+
+                                }
+
+                            ]
+
+                        },
+
+                        options:
+                            chartOptions
+
+                    }
+
+                )
+
+
+            this.obiChart =
+                new Chart(
+
+                    document
+                        .getElementById(
+                            "obiChart"
+                        ),
+
+                    {
+
+                        type: "line",
+
+                        data: {
+
+                            labels: [],
+
+                            datasets: [
+
+                                {
+
+                                    data: [],
+
+                                    borderColor:
+                                        "#a78bfa",
+
+                                    borderWidth: 2,
+
+                                    pointRadius: 0,
+
+                                    tension: 0.2
+
+                                }
+
+                            ]
+
+                        },
+
+                        options:
+                            chartOptions
+
+                    }
+
+                )
+
+
+            this.equityChart =
+                new Chart(
+
+                    document
+                        .getElementById(
+                            "equityChart"
+                        ),
+
+                    {
+
+                        type: "line",
+
+                        data: {
+
+                            labels: [],
+
+                            datasets: [
+
+                                {
+
+                                    data: [],
+
+                                    borderColor:
+                                        "#34d399",
+
+                                    borderWidth: 2,
+
+                                    pointRadius: 0,
+
+                                    tension: 0.2
+
+                                }
+
+                            ]
+
+                        },
+
+                        options:
+                            chartOptions
+
+                    }
+
+                )
+
+        },
+
+
+        updateCharts() {
+
+            if (!this.priceChart)
+                return
+
+
+            const price =
+                this.data.price_history || []
+
+            const obi =
+                this.data.obi_history || []
+
+            const equity =
+                this.data.equity_history || []
+
+
+            const labels =
+                price.map(
+                    (_, i) => i
+                )
+
+
+            this.priceChart.data.labels =
+                labels
+
+            this.priceChart.data.datasets[0].data =
+                price
+
+            this.priceChart.update()
+
+
+            this.obiChart.data.labels =
+                obi.map(
+                    (_, i) => i
+                )
+
+            this.obiChart.data.datasets[0].data =
+                obi
+
+            this.obiChart.update()
+
+
+            this.equityChart.data.labels =
+                equity.map(
+                    (_, i) => i
+                )
+
+            this.equityChart.data.datasets[0].data =
+                equity
+
+            this.equityChart.update()
+
+        },
+
+
+        money(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            )
+                return "0.00"
+
+            return Number(
+                value
+            ).toFixed(2)
+
+        },
+
+
+        fixed(
+            value,
+            digits
+        ) {
+
+            if (
+                value === undefined ||
+                value === null
+            )
+                return "0"
+
+            return Number(
+                value
+            ).toFixed(
+                digits
+            )
+
+        },
+
+
+        percent(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            )
+                return "0.00%"
+
+            return (
+                Number(value) *
+                100
+            ).toFixed(2) + "%"
+
+        },
+
+
+        percentSigned(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            )
+                return "0.00%"
+
+            const number =
+                Number(value) *
+                100
+
+            return (
+                number >= 0
+                    ? "+"
+                    : ""
+            ) +
+            number.toFixed(4) +
+            "%"
+
+        },
+
+
+        number(value) {
+
+            if (
+                value === undefined ||
+                value === null
+            )
+                return "0"
+
+            return Number(
+                value
+            ).toLocaleString(
+                undefined,
+                {
+                    maximumFractionDigits: 2
+                }
+            )
+
+        },
+
+
+        obiClass(value) {
+
+            if (value > 0.05)
+                return "green"
+
+            if (value < -0.05)
+                return "red"
+
+            return "yellow"
+
+        }
+
+    }
+
+})
+
+</script>
+
+</body>
+
+</html>

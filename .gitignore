@@ -1,0 +1,44 @@
+@"
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data - DO NOT UPLOAD
+data/
+*.csv
+*.parquet
+*.feather
+*.pkl
+*.pickle
+*.joblib
+
+# Build files
+build/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Generated files
+results/raw/
+"@ | Out-File -Encoding utf8 .gitignore
