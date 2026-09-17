@@ -1,4 +1,3 @@
-@'
 # HFT Alpha Research Engine
 
 ## Hawkes Process–Informed Order Flow Detection
