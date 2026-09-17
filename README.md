@@ -1,117 +1,287 @@
 # HFT Alpha Research Engine
 
-An event-driven quantitative research system for studying whether
-limit-order-book dynamics and order-flow information contain predictive
-signals for short-horizon market movements.
+### Hawkes Process–Informed Order Flow Detection
 
-The project combines a high-performance C++ limit-order-book replay engine
-with Python-based feature engineering, machine learning, and historical
-event-replay backtesting.
+A quantitative research system for studying high-frequency limit-order-book dynamics using an event-driven C++ replay engine, market microstructure features, Hawkes-process modeling, machine-learning signals, and historical backtesting.
 
 ---
 
-## Key Results
+## Research Question
 
-| Research Component | Result |
-|---|---:|
-| AAPL LOBSTER raw events | 118K+ |
-| Events processed through replay/feature pipeline | 107,165 |
-| Modeling observations | 21,431 |
-| Model ROC-AUC | **0.7121** |
-| Model accuracy | **62.64%** |
-| Signal transitions | **6,472** |
-| Cumulative research backtest return | **44.92%** |
-| Maximum drawdown | **−3.99%** |
-| C++ replay throughput | **11.08M events/sec** |
-| Average replay processing | **~90.3 ns/event** |
+**Do changes in the self- and cross-excitation of order-flow events provide statistically significant and economically useful information about subsequent short-horizon market behavior?**
 
-> Backtest results are based on a limited historical LOBSTER sample and
-> simplified execution assumptions. They are research-sample statistics and
-> should not be interpreted as live trading performance.
+The project investigates whether temporal dependencies between limit-order-book events can be transformed into predictive signals for short-horizon market movements.
 
 ---
 
-# 1. Research Question
+## System Architecture
 
-> **Do changes in order-book state and order-flow dynamics provide
-> statistically useful information about subsequent short-horizon price
-> movements?**
+```text
+LOBSTER Message Data
+        │
+        ▼
+┌──────────────────────────┐
+│ C++ Limit Order Book     │
+│ Replay Engine             │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ Market Microstructure    │
+│ Features                  │
+│                          │
+│ • OBI                    │
+│ • OFI                    │
+│ • Microprice             │
+│ • Spread                 │
+│ • Event Flow             │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ Hawkes Process Modeling  │
+│                          │
+│ • Self-excitation        │
+│ • Cross-excitation       │
+│ • Event intensity        │
+│ • Branching structure    │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ Alpha Signal Generation  │
+└────────────┬─────────────┘
+             │
+             ▼
+┌──────────────────────────┐
+│ Event-Driven Backtest    │
+└────────────┬─────────────┘
+             │
+             ▼
+       Performance Analysis
+```
 
-The project investigates whether market microstructure variables such as:
+---
+
+## Key Components
+
+### 1. High-Performance Order Book Replay
+
+The C++ engine reconstructs the limit order book from event-level market data and processes order-book updates sequentially.
+
+The engine computes market microstructure signals including:
 
 - Order Book Imbalance (OBI)
 - Order Flow Imbalance (OFI)
 - Microprice
 - Bid-ask spread
-- Signed order volume
-- Event type
-- Order direction
-- Order quantity
-
-contain predictive information about short-horizon market movements.
-
-The objective is not simply to maximize classification accuracy.
-
-The research pipeline evaluates whether observable order-flow information can
-be converted into a measurable directional signal and whether that signal
-produces meaningful results under a historical event-replay backtest.
+- Order-flow transitions
+- Short-horizon price movements
 
 ---
 
-# 2. Architecture
+### 2. Hawkes Process Modeling
 
-The system is organized as an end-to-end quantitative research pipeline:
+The research pipeline models temporal clustering and interaction between order-flow events using multivariate Hawkes processes.
+
+The model captures:
+
+- Baseline event intensity
+- Self-excitation
+- Cross-excitation
+- Event-type interaction
+- Branching structure
+
+These dynamics are evaluated as potential predictors of subsequent short-horizon market behavior.
+
+---
+
+### 3. Alpha Signal Generation
+
+Hawkes-process features are combined with order-book and order-flow information to generate event-driven predictive signals.
+
+The system tracks signal transitions and evaluates the subsequent market response.
+
+---
+
+### 4. Backtesting
+
+The research pipeline evaluates generated signals using historical market data.
+
+Performance analysis includes:
+
+- Cumulative return
+- Maximum drawdown
+- Sharpe ratio
+- Hit rate
+- ROC-AUC
+- Classification accuracy
+- Signal transition statistics
+
+---
+
+## Experimental Results
+
+Current experimental results include:
+
+| Metric | Result |
+|---|---:|
+| LOB events processed | 118K+ |
+| Signal transitions | 6,472 |
+| ROC-AUC | 0.712 |
+| Classification accuracy | 62.6% |
+| Cumulative backtest return | 44.92% |
+| Maximum drawdown | -3.99% |
+
+> These results correspond to the current historical research configuration. They should not be interpreted as evidence of live-trading profitability. Results depend on data selection, model parameters, execution assumptions, transaction costs, and validation methodology.
+
+---
+
+## Repository Structure
 
 ```text
-                    LOBSTER AAPL Data
-                           |
-                           v
-              +-------------------------+
-              | C++ Market Event Parser |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Limit Order Book Replay |
-              |        Engine (C++)     |
-              +-------------------------+
-                           |
-              +------------+-------------+
-              |                          |
-              v                          v
-       Order Book State            Event Statistics
-              |                          |
-              +------------+-------------+
-                           |
-                           v
-              +-------------------------+
-              | Microstructure Features |
-              | OBI / OFI / Microprice  |
-              | Spread / Signed Volume   |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Python Feature Pipeline |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Short-Horizon ML Model  |
-              |        XGBoost          |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Signal Generation       |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Historical Backtest     |
-              +-------------------------+
-                           |
-                           v
-              +-------------------------+
-              | Performance Analysis    |
-              +-------------------------+
+hft-alpha-research/
+│
+├── api/
+│   └── app.py
+│
+├── backend/
+│   ├── app/
+│   │   ├── engine.py
+│   │   └── main.py
+│   └── requirements.txt
+│
+├── cpp/
+│   ├── include/
+│   ├── src/
+│   ├── benchmarks/
+│   └── tests/
+│
+├── frontend/
+│   └── index.html
+│
+├── python/
+│   ├── backtest.py
+│   ├── create_labels.py
+│   └── train_alpha.py
+│
+├── .gitignore
+└── README.md
+```
+
+---
+
+## Technology Stack
+
+**C++17 · Python · CMake · NumPy · Pandas · scikit-learn · Hawkes Processes · Limit Order Books · Quantitative Research**
+
+---
+
+## Data
+
+The research uses event-level limit-order-book data from LOBSTER.
+
+Raw market data is **not included in this repository** because of dataset licensing restrictions.
+
+To reproduce the experiments, obtain the appropriate dataset from LOBSTER and place the files in the expected local data directory.
+
+---
+
+## Reproducibility
+
+The research workflow separates:
+
+1. Market-data processing
+2. Order-book reconstruction
+3. Feature generation
+4. Label generation
+5. Hawkes-process modeling
+6. Alpha-model training
+7. Signal generation
+8. Backtesting
+9. Performance analysis
+
+Configuration and experimental parameters should be kept separate from the core implementation to make experiments reproducible.
+
+---
+
+## Building the C++ Engine
+
+From the `cpp` directory:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build . --config Release
+```
+
+---
+
+## Python Environment
+
+Install the required Python dependencies:
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+Additional research dependencies may be required depending on the selected experiment.
+
+---
+
+## Testing
+
+The C++ implementation contains unit tests for the order-book components under:
+
+```text
+cpp/tests/
+```
+
+Benchmarks are available under:
+
+```text
+cpp/benchmarks/
+```
+
+These include performance tests for event processing, order-book replay, feature generation, and latency/throughput measurements.
+
+---
+
+## Research Limitations
+
+This is a quantitative research project rather than a production trading system.
+
+Important considerations include:
+
+- Historical data does not reproduce live execution conditions.
+- Transaction costs and market impact can materially affect realized performance.
+- Model parameters can introduce overfitting.
+- Backtest performance depends on the selected data period and experimental configuration.
+- A limited historical sample is insufficient to establish robustness across market regimes.
+- Further walk-forward and out-of-sample validation is required.
+
+---
+
+## Future Work
+
+Potential extensions include:
+
+- Larger multi-day datasets
+- Walk-forward validation
+- Online Hawkes-process estimation
+- Nonlinear Hawkes processes
+- Regime-dependent excitation matrices
+- Queue-position modeling
+- Transaction-cost-aware execution
+- Cross-asset validation
+- GPU-accelerated feature computation
+- Live market-data integration
+
+---
+
+## Disclaimer
+
+This repository is intended for educational and quantitative research purposes.
+
+Historical backtest results do not guarantee future performance and should not be interpreted as investment advice.
